@@ -7,14 +7,56 @@ const path = require('path');
 const app = express();
 const port = 5000;
 
-//Create pdfs folder if it doesn't exist
-const uploadFolder = path.join(__dirname, 'pdfs');
+const { spawn } = require('child_process');
+
+function processPDF(filePath){
+  return new Promise((resolve, reject) => {
+    const python = spawn('python', ['C:/Users/thynnea/Downloads/Personal Projects/Document System/Document-Scanner--Converter--and-Analyzer/Backend/python_scripts/pdf_text_extraction.py', filePath]);
+
+    python.stdout.on('data', (data) => {
+      console.log(`Python stdout: ${data}`);
+    });
+
+    python.stderr.on('data', (data) => {
+      console.error(`Python stderr: ${data}`);
+    });
+
+    python.on('close', (code) => {
+      console.log(`Python script exited with code ${code}`);
+      if (code !== 0) return reject(new Error('PDF processing failed'));
+      resolve();
+    });
+  });
+}
+
+//Using temporary uplaods folder to store pdf
+const uploadFolder = path.join(__dirname, 'uploads_temp'); 
+
+function processImage(filePath){
+  return new Promise((resolve, reject) => {
+    const python = spawn('python', ['C:/Users/thynnea/Downloads/Personal Projects/Document System/Document-Scanner--Converter--and-Analyzer/Backend/python_scripts/image_conversion.py', filePath]);
+    python.stdout.on('data', (data) => {
+      console.log(`Python stdout: ${data}`);
+    });
+
+    python.stderr.on('data', (data) => {
+      console.error(`Python stderr: ${data}`);
+    });
+
+    python.on('close', (code) => {
+      console.log(`Python script exited with code ${code}`);
+      if (code !== 0) return reject(new Error('Image processing failed'));
+      resolve();
+    });
+  });
+}
+
 if (!fs.existsSync(uploadFolder)) {
   fs.mkdirSync(uploadFolder);
 }
 
 app.use(cors());
-app.use('/pdfs', express.static(uploadFolder));
+//app.use('/pdfs', express.static(uploadFolder));
 
 //Multer storage config
 const storage = multer.diskStorage({
@@ -37,9 +79,35 @@ const upload = multer({
   },
 });
 
-app.post('/upload', upload.single('file'), (req, res) => {
+app.post('/upload', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-  res.json({ message: 'File uploaded successfully', filename: req.file.filename });
+
+  const filePath = req.file.path;
+  const mimeType = req.file.mimetype;
+
+  try{
+    if (mimeType === 'application/pdf'){
+      await processPDF(filePath);
+    }
+    else if (mimeType.startsWith('image/')){
+      await processImage(filePath);
+    }
+    else{
+      return res.status(400).json({message: mimeType});
+    }
+    res.json({ message: 'File uploaded successfully', filename: req.file.filename });
+  } catch (err){
+    console.error(err);
+    res.status(500).json({message: 'Error processing file'})
+  } finally {
+      fs.unlink(filePath, (unlinkErr) => {
+          if (unlinkErr) {
+              console.error(`Error deleting temporary file ${filePath}:`, unlinkErr);
+          } else {
+              console.log(`Temporary file ${filePath} deleted.`);
+          }
+      });
+    }
 });
 
 app.listen(port, () => {
