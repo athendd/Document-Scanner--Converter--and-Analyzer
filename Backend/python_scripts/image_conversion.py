@@ -4,6 +4,8 @@ from PIL import Image
 from flask import Flask, request
 import sys
 from pdf_text_extraction import extract_text_from_pdf
+import pytesseract
+from util_methods import create_output_file, write_to_file
 
 """
 Creates a temporary pdf file to store pdf version of image
@@ -29,30 +31,26 @@ def create_temporary_pdf_file(file_path):
     
     return temp_pdf_path
 
-def convert_img_to_pdf(file_path):
+def get_text_from_img(file_path):
     try:
         img = Image.open(file_path)
-        img.verify()
+        
+        pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+                
+        text = pytesseract.image_to_string(img)
+        
+        if text is None:
+           return 1
+        
+        output_path = create_output_file(file_path)
+        
+        write_to_file(output_path, text)
+        
+        return 0
     
-        #Convert image to PDF file
-        pdf = img2pdf.convert(file_path)
-        
-        temp_pdf_path = create_temporary_pdf_file(file_path)
-        
-        with open(temp_pdf_path, "wb") as f:
-            f.write(pdf)
-            
-            
-        text_extraction_result = extract_text_from_pdf(temp_pdf_path)
-        
-        #Clean up the temporary PDF file
-        try:
-            os.remove(temp_pdf_path)
-            print(f"Temporary PDF deleted: {temp_pdf_path}")
-        except OSError as e:
-            print(f"Error deleting temporary PDF {temp_pdf_path}: {e}", file=sys.stderr)
-
-        return text_extraction_result
+    except  pytesseract.TesseractNotFoundError:
+        print('Tesseract is not installed or in your path', file = sys.stderr)
+        return 1
     
     except Exception as e:
         print(f'Error processing image: {e}', file = sys.stderr)
@@ -64,6 +62,6 @@ if __name__ == '__main__':
         sys.exit(1)
     
     image_path = sys.argv[1]
-    result = convert_img_to_pdf(image_path)
+    result = get_text_from_img(image_path)
     
     sys.exit(result)
