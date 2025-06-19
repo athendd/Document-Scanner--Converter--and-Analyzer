@@ -1,16 +1,39 @@
 import React, { useState } from 'react';
-import { Container, Typography, Button, Box, Input } from '@mui/material';
+import { Container, Typography, Button, Box, Input, CircularProgress } from '@mui/material';
 import axios from 'axios';
 
 export default function UploadPage() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const[highlight, setHighlight] = useState(false);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    //Clear any previous messages
+
+  const handleSetFile = (selectedFile) => {
+    setFile(selectedFile);
     setMessage('');
+  }
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleSetFile(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setHighlight(true);
+  };
+
+  const handleDragLeave = () => {
+    setHighlight(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setHighlight(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0){
+      handleSetFile(e.dataTransfer.files[0]);
+    }
   };
 
   const handleUpload = async () => {
@@ -38,15 +61,59 @@ export default function UploadPage() {
 
   return (
     <Container maxWidth="sm">
-      <Box sx={{ mt: 5, textAlign: 'center' }}>
-        <Typography variant="h4" gutterBottom>
+      <Box
+        sx={{
+          padding: 4,
+          borderRadius: 2,
+          mt: 5,
+          textAlign: 'center',
+          transition: 'background-color 0.3s ease-in-out, border-color 0.3s ease-in-out',
+          backgroundColor: highlight ? 'rgba(25, 118, 210, 0.05)' : 'transparent', // Added background color on highlight
+          cursor: 'pointer',
+          border: highlight ? '2px dashed #1976d2' : '2px dashed grey',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 10 }}>
           Upload Image or PDF
         </Typography>
-        <Input type="file" onChange={handleFileChange} />
-        <Button variant="contained" color="primary" onClick={handleUpload} sx={{ mt: 2 }} disabled={loading}>
-          Upload
+        <Typography variant="h6" gutterBottom sx = {{mb: 5}}>
+          Drag & Drop files here
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          or
+        </Typography>
+        <Button variant = 'contained' sx = {{mt: 5, mb: 3, color: 'black', backgroundColor: 'lightgray'}}
+          component = 'label' disabled = {loading}>
+          Browse
+          <input
+            type="file"
+            hidden 
+            onChange={handleFileChange}/>
         </Button>
-        {message && <Typography sx={{ mt: 2 }}>{message}</Typography>}
+        {file && (
+          <Typography variant="body1" sx={{ mt: 2, fontWeight: 'bold' }}>
+            Selected File: {file.name}
+          </Typography>
+        )}
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleUpload}
+          sx={{ mt: 3 }}
+          disabled={loading || !file}>
+        {loading ? <CircularProgress size={24} color="inherit" /> : 'Upload'}
+        </Button>
+        {message && (
+          <Typography sx={{ mt: 2, color: message.includes('failed') ? 'error.main' : 'text.primary' }}>
+            {message}
+          </Typography>
+        )}
       </Box>
     </Container>
   );
