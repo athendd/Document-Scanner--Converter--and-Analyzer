@@ -13,14 +13,6 @@ function processPDF(filePath){
   return new Promise((resolve, reject) => {
     const python = spawn('python', ['C:/Users/thynnea/Downloads/Personal Projects/Document System/Document-Scanner--Converter--and-Analyzer/Backend/python_scripts/pdf_text_extraction.py', filePath]);
 
-    python.stdout.on('data', (data) => {
-      console.log(`Python stdout: ${data}`);
-    });
-
-    python.stderr.on('data', (data) => {
-      console.error(`Python stderr: ${data}`);
-    });
-
     python.on('close', (code) => {
       console.log(`Python script exited with code ${code}`);
       if (code !== 0) return reject(new Error('PDF processing failed'));
@@ -35,13 +27,6 @@ const uploadFolder = path.join(__dirname, 'uploads_temp');
 function processImage(filePath){
   return new Promise((resolve, reject) => {
     const python = spawn('python', ['C:/Users/thynnea/Downloads/Personal Projects/Document System/Document-Scanner--Converter--and-Analyzer/Backend/python_scripts/image_conversion.py', filePath]);
-    python.stdout.on('data', (data) => {
-      console.log(`Python stdout: ${data}`);
-    });
-
-    python.stderr.on('data', (data) => {
-      console.error(`Python stderr: ${data}`);
-    });
 
     python.on('close', (code) => {
       console.log(`Python script exited with code ${code}`);
@@ -56,9 +41,7 @@ if (!fs.existsSync(uploadFolder)) {
 }
 
 app.use(cors());
-//app.use('/pdfs', express.static(uploadFolder));
 
-//Multer storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadFolder);
@@ -95,10 +78,10 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     else{
       return res.status(400).json({message: mimeType});
     }
-    res.json({ message: 'File uploaded successfully', filename: req.file.filename });
+    res.json({ message: 'File Text Extraction Successful', filename: req.file.filename });
   } catch (err){
     console.error(err);
-    res.status(500).json({message: 'Error processing file'})
+    res.status(500).json({message: 'Error Extracting Text from File'})
   } finally {
       fs.unlink(filePath, (unlinkErr) => {
           if (unlinkErr) {

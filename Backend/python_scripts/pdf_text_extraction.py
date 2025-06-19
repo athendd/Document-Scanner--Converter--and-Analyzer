@@ -3,15 +3,20 @@ import pdfplumber
 import sys
 from util_methods import create_output_file, write_to_file
 
+"""
+Extracts the text content from a given pdf file and saves
+the text as a file in the documents_text folder
+"""
 def extract_text_from_pdf(pdf_file_path):
     try:
         all_text = ''
+        
         with pdfplumber.open(pdf_file_path) as pdf:
             for page in pdf.pages:
                 page_text= page.extract_text()
                 if page_text:
                     all_text += page_text + '\n'
-                    
+        
         if all_text == '':
             raise Exception('No text in PDF file')
                 

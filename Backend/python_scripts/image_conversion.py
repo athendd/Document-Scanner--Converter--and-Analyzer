@@ -27,11 +27,11 @@ def get_text_from_img(file_path):
         return 0
     
     except  pytesseract.TesseractNotFoundError:
-        print('Tesseract is not installed or in your path', file = sys.stderr)
+        print('Tesseract is not installed or not in your path', file = sys.stderr)
         return 1
     
     except Exception as e:
-        print(f'Error processing image: {e}', file = sys.stderr)
+        print(f'Error processing text from image: {e}', file = sys.stderr)
         return 1
 
 if __name__ == '__main__':
