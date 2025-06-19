@@ -1,36 +1,14 @@
 import os
-import img2pdf
 from PIL import Image
 from flask import Flask, request
 import sys
-from pdf_text_extraction import extract_text_from_pdf
 import pytesseract
 from util_methods import create_output_file, write_to_file
 
 """
-Creates a temporary pdf file to store pdf version of image
-while its text is being extract
+Extracts text from a given image and saves the text 
+to the documents_text folder
 """
-def create_temporary_pdf_file(file_path):
-    #Get the current directory
-    current_script_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    #Get the Backend directory
-    backend_dir = os.path.dirname(current_script_dir)
-    
-    #Get path to uploads_temp directory
-    temp_pdf_dir = os.path.join(backend_dir, 'uploads_temp')
-    
-    #Create uploads_temp directory if it doesn't exist
-    os.makedirs(temp_pdf_dir, exist_ok=True)
-    
-    #Get filename of current file
-    base_filename = os.path.splitext(os.path.basename(file_path))[0]
-    temp_pdf_filename = f"{base_filename}_{os.urandom(8).hex()}.pdf"
-    temp_pdf_path = os.path.join(temp_pdf_dir, temp_pdf_filename)
-    
-    return temp_pdf_path
-
 def get_text_from_img(file_path):
     try:
         img = Image.open(file_path)
