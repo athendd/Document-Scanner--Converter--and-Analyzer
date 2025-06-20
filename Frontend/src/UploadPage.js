@@ -8,14 +8,26 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const[highlight, setHighlight] = useState(false);
 
+  const isValidFileType = (file) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+  return allowedTypes.includes(file.type);
+  };
 
   const handleSetFile = (selectedFile) => {
     setFile(selectedFile);
     setMessage('');
   }
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      handleSetFile(e.target.files[0]);
+      //handleSetFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      if (!isValidFileType(selectedFile)){
+        setMessage('Only accepts JPEG, PNG, or PDF files');
+        setFile(null);
+        return;
+      }
+      handleSetFile(selectedFile);
     }
   };
 
@@ -32,7 +44,13 @@ export default function UploadPage() {
     e.preventDefault();
     setHighlight(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0){
-      handleSetFile(e.dataTransfer.files[0]);
+      const droppedFile = e.dataTransfer.files[0];
+    if (!isValidFileType(droppedFile)) {
+      setMessage('Only accepts JPEG, PNG, JPG, or PDF files');
+      setFile(null);
+      return;
+    }
+    handleSetFile(droppedFile);
     }
   };
 
@@ -53,7 +71,13 @@ export default function UploadPage() {
       });
       setMessage(response.data.message);
     } catch (error) {
-      setMessage('Upload failed: ' + error.message);
+        if (error.response && error.response.data && error.response.data.message) {
+          if (error.response.data.message === 'Only JPEG, PNG, or PDF files are allowed') {
+            setMessage('Upload failed: Only accepts PNG, JPEG, or PDF files');
+          }
+        } else {
+          setMessage('Upload failed: ' + error.message);
+        }
     } finally {
       setLoading(false);
     }
@@ -68,7 +92,7 @@ export default function UploadPage() {
           mt: 5,
           textAlign: 'center',
           transition: 'background-color 0.3s ease-in-out, border-color 0.3s ease-in-out',
-          backgroundColor: highlight ? 'rgba(25, 118, 210, 0.05)' : 'transparent', // Added background color on highlight
+          backgroundColor: highlight ? 'rgba(25, 118, 210, 0.05)' : 'transparent', 
           cursor: 'pointer',
           border: highlight ? '2px dashed #1976d2' : '2px dashed grey',
           display: 'flex',
