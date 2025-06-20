@@ -71,13 +71,7 @@ export default function UploadPage() {
       });
       setMessage(response.data.message);
     } catch (error) {
-        if (error.response && error.response.data && error.response.data.message) {
-          if (error.response.data.message === 'Only JPEG, PNG, or PDF files are allowed') {
-            setMessage('Upload failed: Only accepts PNG, JPEG, or PDF files');
-          }
-        } else {
-          setMessage('Upload failed: ' + error.message);
-        }
+      setMessage('Upload failed: ' + error.message);
     } finally {
       setLoading(false);
     }
