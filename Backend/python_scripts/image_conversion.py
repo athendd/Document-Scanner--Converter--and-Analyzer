@@ -15,11 +15,8 @@ def create_temporary_pdf_file(file_path):
     backend_dir = os.path.dirname(current_script_dir)
     
     #Get path to uploads_temp directory
-    pdf_dir = os.path.join(backend_dir, 'pdf_files')
-    
-    #Create uploads_temp directory if it doesn't exist
-    os.makedirs(pdf_dir, exist_ok=True)
-    
+    pdf_dir = os.path.join(backend_dir, 'pdf_dir')
+
     #Get filename of current file
     base_filename = os.path.splitext(os.path.basename(file_path))[0]
     temp_pdf_filename = f"{base_filename}_{os.urandom(8).hex()}.pdf"
@@ -29,6 +26,9 @@ def create_temporary_pdf_file(file_path):
 
 def convert_img_to_pdf(file_path):
     try:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError
+        
         img = Image.open(file_path)
         img.verify()
     
@@ -36,7 +36,7 @@ def convert_img_to_pdf(file_path):
         pdf = img2pdf.convert(file_path)
         
         temp_pdf_path = create_temporary_pdf_file(file_path)
-        
+                
         with open(temp_pdf_path, "wb") as f:
             f.write(pdf)
     
