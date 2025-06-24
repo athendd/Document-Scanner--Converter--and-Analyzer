@@ -11,7 +11,7 @@ const { spawn } = require('child_process');
 
 function processPDF(filePath){
   return new Promise((resolve, reject) => {
-    const python = spawn('python', ['C:/Users/thynnea/Downloads/Personal Projects/Document System/Document-Scanner--Converter--and-Analyzer/Backend/python_scripts/pdf_text_extraction.py', filePath]);
+    const python = spawn('python', ['C:/Users/thynnea/Downloads/Personal Projects/Document System/Document-Scanner--Converter--and-Analyzer/Backend/python_scripts/pdf_saver.py', filePath]);
 
     python.on('close', (code) => {
       console.log(`Python script exited with code ${code}`);
@@ -27,14 +27,6 @@ const uploadFolder = path.join(__dirname, 'uploads_temp');
 function processImage(filePath){
   return new Promise((resolve, reject) => {
     const python = spawn('python', ['C:/Users/thynnea/Downloads/Personal Projects/Document System/Document-Scanner--Converter--and-Analyzer/Backend/python_scripts/image_conversion.py', filePath]);
-    
-    python.stdout.on('data', (data) => {
-      console.log(`Python stdout: ${data}`);
-    });
-
-    python.stderr.on('data', (data) => {
-      console.error(`Python stderr: ${data}`);
-    });
 
     python.on('close', (code) => {
       console.log(`Python script exited with code ${code}`);
