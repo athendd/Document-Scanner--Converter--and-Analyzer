@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Typography, Button, Box, Input, CircularProgress } from '@mui/material';
 import axios from 'axios';
+import zoldyckImg from './Zoldyck Family Arc Network.png';
 
 export default function UploadPage() {
   const [file, setFile] = useState(null);
@@ -9,7 +10,7 @@ export default function UploadPage() {
   const[highlight, setHighlight] = useState(false);
 
   const isValidFileType = (file) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
   return allowedTypes.includes(file.type);
   };
 
@@ -23,7 +24,7 @@ export default function UploadPage() {
       //handleSetFile(e.target.files[0]);
       const selectedFile = e.target.files[0];
       if (!isValidFileType(selectedFile)){
-        setMessage('Only accepts JPEG, PNG, or PDF files');
+        setMessage('Only accepts JPEG, JPG, or PNG files');
         setFile(null);
         return;
       }
@@ -46,7 +47,7 @@ export default function UploadPage() {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0){
       const droppedFile = e.dataTransfer.files[0];
     if (!isValidFileType(droppedFile)) {
-      setMessage('Only accepts JPEG, PNG, JPG, or PDF files');
+      setMessage('Only accepts JPEG, JPG, or PNG files');
       setFile(null);
       return;
     }
@@ -84,6 +85,7 @@ export default function UploadPage() {
           padding: 4,
           borderRadius: 2,
           mt: 5,
+          mb: 8,
           textAlign: 'center',
           transition: 'background-color 0.3s ease-in-out, border-color 0.3s ease-in-out',
           backgroundColor: highlight ? 'rgba(25, 118, 210, 0.05)' : 'transparent', 
@@ -133,6 +135,11 @@ export default function UploadPage() {
           </Typography>
         )}
       </Box>
+      <Box sx = {{textAlign: 'center', mb: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+        <Typography variant = 'h4' sx = {{border: 'bold', mb: 3}}>Resolved Image</Typography>
+        <img src={zoldyckImg} alt='Resolved Image' width = '75%' height = '75%' alignItems = 'center'/>   
+        <Button varaint = 'contained' sx = {{mt: 5, color: 'black', backgroundColor: 'lightblue'}}>Save Image</Button> 
+      </Box>  
     </Container>
   );
 }
