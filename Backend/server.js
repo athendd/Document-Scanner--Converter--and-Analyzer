@@ -3,27 +3,40 @@ const multer = require('multer');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const uniqueId = uuidv4();
 
 const app = express();
 const port = 5000;
 
 const { spawn } = require('child_process');
 
-function processImage(filePath){
-  return new Promise((resolve, reject) => {
-    const python = spawn('python', ['C:/Users/thynnea/Downloads/Personal Projects/Document System/Document-Scanner--Converter--and-Analyzer/Backend/python_scripts/image_resolution_improver.py', filePath]);
+const outputDir = path.join(__dirname, 'outputs');
+if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
-    python.on('close', (code) => {
-      console.log(`Python script exited with code ${code}`);
-      if (code !== 0) return reject(new Error('Image processing failed'));
-      resolve();
-    });
-  });
-}
+const inputDir = path.join(__dirname, 'inputs');
+if (!fs.existsSync(inputDir)) fs.mkdirSync(inputDir);
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, inputDir); 
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, uuidv4() + ext);
+  }
+});
 
 app.use(cors());
+app.use('/outputs', express.static(outputDir));
+
+function generateUniqueFileName(filePath) {
+  const fileExtension = path.extname(filePath);
+  return `${uuidv4()}${fileExtension}`;
+}
 
 const upload = multer({
+  storage,
   fileFilter: (req, file, cb) => {
     const allowedExtensions = ['.jpeg', '.jpg', '.png'];
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
@@ -37,36 +50,36 @@ const upload = multer({
   },
 });
 
-app.post('/upload', upload.single('file'), async (req, res) => {
-  const filePath = req.file.path;
-  const mimeType = req.file.mimetype;
-  try{
-    if (mimeType.startsWith('image/')){
-      await processImage(filePath);
+app.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+  const inputFilePath = req.file.path;
+  const outputFilename = generateUniqueFileName(inputFilePath);
+  const outputFilePath = path.join(outputDir, outputFilename);
+  const scriptPath = path.join(__dirname, 'python_scripts', 'image_resolution_improver.py');
+
+  const python = spawn('python', [scriptPath, inputFilePath, outputFilePath], { windowsHide: true });
+
+  let responded = false;
+  let stderrBuf = '';
+
+  python.stdout.on('data', d => console.log('[py stdout]', d.toString()));
+  python.stderr.on('data', d => { stderrBuf += d.toString(); console.error('[py stderr]', d.toString()); });
+
+  python.on('error', (err) => {
+    if (responded) return;
+    responded = true;
+    return res.status(500).json({ message: 'Python process error', detail: String(err) });
+  });
+
+  python.on('close', (code) => {
+    if (responded) return;
+    responded = true;
+    if (code !== 0) {
+      return res.status(500).json({ message: 'Image processing failed', detail: stderrBuf.trim() });
     }
-    else{
-      return res.status(400).json({message: mimeType});
-    }
-    res.json({ message: 'File Upload Successful', filename: req.file.filename });
-  } catch (err){
-    console.error(err);
-    if (err.message === 'Only JPEG, JPG, or PNG files are allowed'){
-      return res.status(400).json({message: err.message});
-    }
-    res.status(500).json({message: 'Error Uploading File'})
-  } finally {
-      if (mimeType !== 'application/pdf') {
-        fs.unlink(filePath, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error(`Error deleting temporary file ${filePath}:`, unlinkErr);
-          } else {
-            console.log(`Temporary file ${filePath} deleted.`);
-          }
-        });
-      } else {
-        console.log(`PDF file retained at ${filePath}`);
-      }
-    }
+    res.json({ imageUrl: `/outputs/${outputFilename}` });
+  });
 });
 
 app.listen(port, () => {
