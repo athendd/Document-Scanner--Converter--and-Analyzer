@@ -78,8 +78,12 @@ app.post('/upload', upload.single('file'), (req, res) => {
     if (code !== 0) {
       return res.status(500).json({ message: 'Image processing failed', detail: stderrBuf.trim() });
     }
+    fs.unlink(inputFilePath, (err) => {
+      if (err) console.error('Error deleting input file:', err);
+    });
     res.json({ imageUrl: `/outputs/${outputFilename}` });
   });
+
 });
 
 app.listen(port, () => {

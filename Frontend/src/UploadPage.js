@@ -85,6 +85,24 @@ export default function UploadPage() {
     }
   };
 
+  async function saveImage(image){
+    try{
+      //Request the image
+      const {data} = await axios.get(image, {responseType: 'blob'});
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = image.split('/').pop() || 'resolved-image.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+    catch(err){
+      setMessage('Save Failed');
+    }
+  }
+
   return (
     <Container maxWidth="sm">
       <Box
@@ -171,8 +189,8 @@ export default function UploadPage() {
             height="75%"
             style={{ margin: '0 auto' }}
           />
-          <Button variant="contained" sx={{ mt: 5, color: 'black', backgroundColor: 'lightblue' }}>
-            Save Image
+          <Button variant="contained" onClick = {() => saveImage(outputImage)} sx={{ mt: 5, color: 'black', backgroundColor: 'lightblue' }}>
+            Download Image
           </Button>
         </Box>
       )}
