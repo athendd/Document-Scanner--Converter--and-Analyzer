@@ -185,13 +185,26 @@ export default function UploadPage() {
           <img
             src={outputImage}
             alt="Resolved Image"
-            width="75%"
-            height="75%"
-            style={{ margin: '0 auto' }}
+            style={{ display: 'block', maxWidth: '100%', height: 'auto', margin: '0 auto' }}
           />
-          <Button variant="contained" onClick = {() => saveImage(outputImage)} sx={{ mt: 5, color: 'black', backgroundColor: 'lightblue' }}>
-            Download Image
-          </Button>
+          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Button
+              variant="outlined"
+              component="a"
+              href={outputImage}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open Full Size
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => saveImage(outputImage)}
+              sx={{ color: 'black', backgroundColor: 'lightblue' }}
+            >
+              Download Image
+            </Button>
+          </Box>
         </Box>
       )}
     </Container>

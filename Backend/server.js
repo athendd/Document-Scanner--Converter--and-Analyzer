@@ -56,7 +56,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
   const inputFilePath = req.file.path;
   const outputFilename = generateUniqueFileName(inputFilePath);
   const outputFilePath = path.join(outputDir, outputFilename);
-  const scriptPath = path.join(__dirname, 'python_scripts', 'image_resolution_improver.py');
+  const scriptPath = path.join(__dirname, 'python_scripts', 'main.py');
 
   const python = spawn('python', [scriptPath, inputFilePath, outputFilePath], { windowsHide: true });
 
