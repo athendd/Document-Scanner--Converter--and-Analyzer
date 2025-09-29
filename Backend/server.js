@@ -89,3 +89,33 @@ app.post('/upload', upload.single('file'), (req, res) => {
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+function emptyFolder(folderPath) {
+  fs.readdir(folderPath, (err, files) => {
+    if (err) {
+      console.error(`Error reading folder ${folderPath}:`, err);
+      return;
+    }
+    for (const file of files) {
+      fs.unlink(path.join(folderPath, file), (unlinkErr) => {
+        if (unlinkErr) {
+          console.error(`Error deleting file ${file} in ${folderPath}:`, unlinkErr);
+        }
+      });
+    }
+  });
+}
+
+function cleanupOnExit() {
+  emptyFolder(inputDir);
+  emptyFolder(outputDir);
+}
+
+process.on('SIGINT', () => {
+  cleanupOnExit();
+  process.exit();
+});
+process.on('SIGTERM', () => {
+  cleanupOnExit();
+  process.exit();
+});
