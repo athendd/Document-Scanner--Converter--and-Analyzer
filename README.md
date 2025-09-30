@@ -27,7 +27,7 @@ Node.js + Express + Multer (For file uploads)
 Python + OpenCV + NumPy
 
 
-### How It Works
+## How It Works
 1. User uploads an image to the frontend
 2. File is sent to the backend
 3. Backend stores image in inputs folder
@@ -43,7 +43,7 @@ Python + OpenCV + NumPy
     -Download the sharpened image to their local device
 
 
-### Instructions On How To Run Application
+## Instructions On How To Run Application
 
 ### 1. Clone the repository
 ```bash
