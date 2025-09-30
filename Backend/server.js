@@ -30,6 +30,31 @@ const storage = multer.diskStorage({
 app.use(cors());
 app.use('/outputs', express.static(outputDir));
 
+function emptyFolder(folderPath) {
+  try{
+    if (!fs.existsSync(folderPath)) return;
+    for (const entry of fs.readdirSync(folderPath)) {
+      fs.rmSync(path.join(folderPath, entry), { recursive: true, force: true });
+    }
+  } catch(err) {
+    console.error(`Error emptying folder ${folderPath}:`, err);
+  }
+}
+
+function cleanupOnExit() {
+  emptyFolder(inputDir);
+  emptyFolder(outputDir);
+}
+
+process.on('SIGINT', () => {
+  cleanupOnExit();
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  cleanupOnExit();
+  process.exit(0);
+});
+
 function generateUniqueFileName(filePath) {
   const fileExtension = path.extname(filePath);
   return `${uuidv4()}${fileExtension}`;
@@ -88,34 +113,4 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
-});
-
-function emptyFolder(folderPath) {
-  fs.readdir(folderPath, (err, files) => {
-    if (err) {
-      console.error(`Error reading folder ${folderPath}:`, err);
-      return;
-    }
-    for (const file of files) {
-      fs.unlink(path.join(folderPath, file), (unlinkErr) => {
-        if (unlinkErr) {
-          console.error(`Error deleting file ${file} in ${folderPath}:`, unlinkErr);
-        }
-      });
-    }
-  });
-}
-
-function cleanupOnExit() {
-  emptyFolder(inputDir);
-  emptyFolder(outputDir);
-}
-
-process.on('SIGINT', () => {
-  cleanupOnExit();
-  process.exit();
-});
-process.on('SIGTERM', () => {
-  cleanupOnExit();
-  process.exit();
 });
